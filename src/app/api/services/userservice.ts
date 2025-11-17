@@ -10,3 +10,7 @@ export const getUserById = (id: string) => {
 export const createUser = (data: { name: string; username: string; email: string; passwordHash: string }) => {
   return prisma.user.create({ data });
 };
+
+export const getAllUsers = () => {
+  return prisma.user.findMany();
+};

@@ -3,9 +3,12 @@ import * as userService from "../services/userservice";
 
 export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get("id");
-  if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-  const user = await userService.getUserById(userId);
-  return NextResponse.json(user);
+  if (userId) {
+    const user = await userService.getUserById(userId);
+    return NextResponse.json(user);
+  }
+  const users = await userService.getAllUsers();
+  return NextResponse.json(users);
 }
 
 export async function POST(req: NextRequest) {
