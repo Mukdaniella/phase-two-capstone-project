@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as postService from "../services/postservice";
+
+// temporary in-memory storage
+let posts: any[] = [];
 
 export async function GET(req: NextRequest) {
-  const posts = await postService.getAllPosts();
   return NextResponse.json(posts);
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const post = await postService.createPost(body);
-  return NextResponse.json(post);
+  const { title, content, status, slug, image } = await req.json();
+  const newPost = {
+    id: Date.now().toString(),
+    title,
+    content,
+    slug,
+    status: status || "draft",
+    image: image || null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  posts.push(newPost);
+  return NextResponse.json(newPost);
 }
 
-export async function PUT(req: NextRequest) {
-  const body = await req.json();
-  const { id, ...data } = body;
-  const post = await postService.updatePost(id, data);
-  return NextResponse.json(post);
-}
-
-export async function DELETE(req: NextRequest) {
-  const body = await req.json();
-  const { id } = body;
-  const deleted = await postService.deletePost(id);
-  return NextResponse.json(deleted);
-}
+// helper for PUT & DELETE
+export { posts };
