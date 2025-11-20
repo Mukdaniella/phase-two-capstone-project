@@ -13,17 +13,21 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+    const res = await fetch("/api/auth/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password }),
+});
 
-    if (res?.error) {
-      setError(res.error);
-    } else {
-      router.push("");
-    }
+const data = await res.json();
+
+if (res.ok) {
+   localStorage.setItem("token", data.token);
+  // store token manually (cookies / localStorage)
+  router.push("/dashboard");
+} else {
+  setError(data.error);
+}
   };
 
   return (

@@ -1,24 +1,32 @@
 'use client';
 
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
       router.push("/login");
+      return;
     }
-  }, [status, router]);
+
+    // optionally fetch user profile using token
+    setEmail("user@example.com"); // or from API
+    setLoading(false);
+  }, [router]);
+
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div>
       <h1>Dashboard</h1>
-      {status === "loading" && <p>Loading...</p>}
-      {session && <p>Welcome {session.user?.email}</p>}
+      <p>Welcome {email}</p>
     </div>
   );
 }
