@@ -20,7 +20,7 @@ export default async function PostsPage() {
             </div>
           )}
           <h2 className="text-xl font-bold">{post.title}</h2>
-          <p className="text-gray-600">{post.excerpt}</p>
+          <div className="text-gray-600 prose" dangerouslySetInnerHTML={{ __html: post.content.substring(0, 200) + '...' }} />
         </Link>
       ))}
     </div>
