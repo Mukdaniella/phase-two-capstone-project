@@ -6,6 +6,17 @@ import Link from "next/link";
 import LikeButton from "../components/likebutton";
 import CommentForm from "../components/commentform";
 
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    username: string;
+  };
+}
+
 interface Post {
   id: string;
   title: string;
@@ -24,6 +35,8 @@ export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [showComments, setShowComments] = useState<{[key: string]: boolean}>({});
+  const [comments, setComments] = useState<{[key: string]: Comment[]}>({});
+  const [loadingComments, setLoadingComments] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     fetchPosts();
@@ -43,8 +56,34 @@ export default function PostsPage() {
     }
   };
 
+  const fetchComments = async (postId: string) => {
+    if (comments[postId]) return; // Already loaded
+    
+    setLoadingComments(prev => ({...prev, [postId]: true}));
+    try {
+      const res = await fetch(`/api/comments?postId=${postId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setComments(prev => ({...prev, [postId]: data}));
+      }
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+    } finally {
+      setLoadingComments(prev => ({...prev, [postId]: false}));
+    }
+  };
+
+  const toggleComments = (postId: string) => {
+    const isShowing = showComments[postId];
+    setShowComments(prev => ({...prev, [postId]: !isShowing}));
+    
+    if (!isShowing) {
+      fetchComments(postId);
+    }
+  };
+
   if (loading) {
-    return <div className="text-center mt-20">Loading posts...</div>;
+    return <div className="text-center mt-20 text-gray-600 text-lg">Loading posts...</div>;
   }
 
   return (
@@ -53,7 +92,7 @@ export default function PostsPage() {
 
       {posts.map((post) => (
         <div key={post.id} className="mb-6 border rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow duration-200">
-          <Link href={`/posts/${post.slug}`}>
+          <Link href={`/posts/${post.slug}`} className="block">
             {post.coverImageUrl && (
               <div className="w-full h-60 relative">
                 <img
@@ -73,6 +112,7 @@ export default function PostsPage() {
               />
             </div>
           </Link>
+
           <div className="px-4 pb-4">
             <div className="flex items-center justify-between mb-3">
               <LikeButton 
@@ -81,21 +121,41 @@ export default function PostsPage() {
                 initialLiked={session ? post.Likes?.some(like => like.userId === session.user?.id) || false : false}
               />
               <button
-                onClick={() => setShowComments(prev => ({...prev, [post.id]: !prev[post.id]}))}
-                className="flex items-center gap-2 text-gray-500 hover:text-blue-500"
+                onClick={() => toggleComments(post.id)}
+                className="flex items-center gap-2 text-gray-500 hover:text-purple-500 transition-colors duration-200"
               >
                 <span>💬</span>
                 <span className="text-sm">{post._count?.comments || 0} comments</span>
               </button>
             </div>
+
             {showComments[post.id] && (
-              <CommentForm 
-                postId={post.id} 
-                onCommentAdded={() => {
-                  fetchPosts();
-                  setShowComments(prev => ({...prev, [post.id]: false}));
-                }}
-              />
+              <div className="mt-4 border-t pt-4">
+                {loadingComments[post.id] ? (
+                  <div className="text-center py-4 text-gray-600">Loading comments...</div>
+                ) : (
+                  <div className="space-y-3 mb-4">
+                    {comments[post.id]?.map((comment) => (
+                      <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm text-gray-900">{comment.author.name}</span>
+                          <span className="text-gray-500 text-xs">
+                            {new Date(comment.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 text-sm">{comment.content}</p>
+                      </div>
+                    )) || <p className="text-gray-500 text-center py-2">No comments yet</p>}
+                  </div>
+                )}
+                <CommentForm 
+                  postId={post.id} 
+                  onCommentAdded={() => {
+                    fetchComments(post.id);
+                    fetchPosts();
+                  }}
+                />
+              </div>
             )}
           </div>
         </div>

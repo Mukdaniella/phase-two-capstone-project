@@ -59,7 +59,8 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
       <button
         type="submit"
         disabled={!comment.trim() || submitting}
-        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+        className="mt-2 px-4 py-2 bg-gradient-to-r from-blue-700 via-purple-500 to-pink-500 
+                     text-white font-semibold rounded "
       >
         {submitting ? 'Posting...' : 'Comment'}
       </button>
