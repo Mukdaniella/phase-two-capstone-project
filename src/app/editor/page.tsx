@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 
 const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
@@ -10,6 +10,7 @@ const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 export default function EditorPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const editor = useRef(null);
 
   const [title, setTitle] = useState("");
@@ -18,16 +19,37 @@ export default function EditorPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    const draft = localStorage.getItem("editor-draft");
-    if (draft) {
-      const { title: t, content: c, coverImageUrl: img } = JSON.parse(draft);
-      setTitle(t || "");
-      setContent(c || "");
-      setCoverImageUrl(img || "");
+    const editId = searchParams.get('edit');
+    if (editId) {
+      setEditingId(editId);
+      fetchPost(editId);
+    } else {
+      const draft = localStorage.getItem("editor-draft");
+      if (draft) {
+        const { title: t, content: c, coverImageUrl: img } = JSON.parse(draft);
+        setTitle(t || "");
+        setContent(c || "");
+        setCoverImageUrl(img || "");
+      }
     }
-  }, []);
+  }, [searchParams]);
+
+  const fetchPost = async (id: string) => {
+    try {
+      const res = await fetch(`/api/posts/${id}`);
+      if (res.ok) {
+        const post = await res.json();
+        setTitle(post.title);
+        setContent(post.content);
+        setCoverImageUrl(post.coverImageUrl || "");
+      }
+    } catch (error) {
+      console.error('Failed to fetch post:', error);
+    }
+  };
 
   const config = {
     readonly: false,
@@ -63,8 +85,11 @@ export default function EditorPage() {
     setMessage("Saving draft...");
 
     try {
-      const res = await fetch("/api/posts", {
-        method: "POST",
+      const url = editingId ? `/api/posts/${editingId}` : "/api/posts";
+      const method = editingId ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
@@ -94,8 +119,11 @@ export default function EditorPage() {
     setMessage("Publishing...");
 
     try {
-      const res = await fetch("/api/posts", {
-        method: "POST",
+      const url = editingId ? `/api/posts/${editingId}` : "/api/posts";
+      const method = editingId ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
@@ -141,7 +169,7 @@ export default function EditorPage() {
   return (
     <div className="max-w-4xl mx-auto mt-16 p-10 bg-white rounded-3xl shadow-2xl">
       <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
-        Create a New Post
+        {editingId ? "Edit Post" : "Create a New Post"}
       </h1>
 
       {/* TITLE */}

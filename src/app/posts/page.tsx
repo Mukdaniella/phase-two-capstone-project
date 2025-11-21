@@ -23,6 +23,11 @@ interface Post {
   slug: string;
   content: string;
   coverImageUrl?: string;
+  author: {
+    id: string;
+    name: string;
+    username: string;
+  };
   _count: {
     Likes: number;
     comments: number;
@@ -82,6 +87,28 @@ export default function PostsPage() {
     }
   };
 
+  const deletePost = async (postId: string) => {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    
+    try {
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: 'DELETE'
+      });
+      
+      if (res.ok) {
+        setPosts(prev => prev.filter(post => post.id !== postId));
+        alert('Post deleted successfully!');
+      } else {
+        const error = await res.text();
+        console.error('Delete failed:', error);
+        alert('Failed to delete post: ' + error);
+      }
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      alert('Error deleting post: ' + error);
+    }
+  };
+
   if (loading) {
     return <div className="text-center mt-20 text-gray-600 text-lg">Loading posts...</div>;
   }
@@ -115,18 +142,37 @@ export default function PostsPage() {
 
           <div className="px-4 pb-4">
             <div className="flex items-center justify-between mb-3">
-              <LikeButton 
-                postId={post.id} 
-                initialLikes={post._count?.Likes || 0} 
-                initialLiked={session ? post.Likes?.some(like => like.userId === session.user?.id) || false : false}
-              />
-              <button
-                onClick={() => toggleComments(post.id)}
-                className="flex items-center gap-2 text-gray-500 hover:text-purple-500 transition-colors duration-200"
-              >
-                <span>💬</span>
-                <span className="text-sm">{post._count?.comments || 0} comments</span>
-              </button>
+              <div className="flex items-center gap-4">
+                <LikeButton 
+                  postId={post.id} 
+                  initialLikes={post._count?.Likes || 0} 
+                  initialLiked={session ? post.Likes?.some(like => like.userId === session.user?.id) || false : false}
+                />
+                <button
+                  onClick={() => toggleComments(post.id)}
+                  className="flex items-center gap-2 text-gray-500 hover:text-purple-500 transition-colors duration-200"
+                >
+                  <span>💬</span>
+                  <span className="text-sm">{post._count?.comments || 0} comments</span>
+                </button>
+              </div>
+              
+              {session?.user?.id === post.author?.id && (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/editor?edit=${post.id}`}
+                    className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
+                  >
+                    Edit
+                  </Link>
+                  <button
+                    onClick={() => deletePost(post.id)}
+                    className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
 
             {showComments[post.id] && (
