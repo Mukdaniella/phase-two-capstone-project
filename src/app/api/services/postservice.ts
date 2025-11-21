@@ -18,6 +18,7 @@ export const getPostById = async (id: string) => {
 export const createPost = async (data: {
   title: string;
   content: string;
+  slug: string;
   authorId: string;
   tagIds?: string[];
   coverImageUrl?: string;
@@ -27,12 +28,11 @@ export const createPost = async (data: {
     data: {
       title: data.title,
       content: data.content,
+      slug: data.slug,
       coverImageUrl: data.coverImageUrl,
       isPublished: data.isPublished ?? false,
+      publishedAt: data.isPublished ? new Date() : null,
       authorId: data.authorId,
-      tags: {
-        connect: data.tagIds?.map((tagId) => ({ tagId })) || [],
-      },
     },
   });
 };
