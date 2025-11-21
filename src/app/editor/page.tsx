@@ -22,9 +22,10 @@ export default function EditorPage() {
   useEffect(() => {
     const draft = localStorage.getItem('editor-draft');
     if (draft) {
-      const { title: draftTitle, content: draftContent } = JSON.parse(draft);
+      const { title: draftTitle, content: draftContent, coverImageUrl: draftCover } = JSON.parse(draft);
       setTitle(draftTitle || '');
       setContent(draftContent || '');
+      setCoverImageUrl(draftCover || '');
     }
   }, []);
 
@@ -57,6 +58,7 @@ export default function EditorPage() {
           title,
           content,
           slug: title.toLowerCase().replace(/\s+/g, '-'),
+          coverImageUrl,
           isPublished: false
         })
       });
@@ -87,6 +89,7 @@ export default function EditorPage() {
           title,
           content,
           slug: title.toLowerCase().replace(/\s+/g, '-'),
+          coverImageUrl,
           isPublished: true
         })
       });
@@ -107,7 +110,7 @@ export default function EditorPage() {
   };
 
   const saveLocally = () => {
-    localStorage.setItem('editor-draft', JSON.stringify({ title, content }));
+    localStorage.setItem('editor-draft', JSON.stringify({ title, content, coverImageUrl }));
     setMessage('Saved locally!');
     setTimeout(() => setMessage(''), 2000);
   };

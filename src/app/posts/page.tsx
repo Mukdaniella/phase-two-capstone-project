@@ -16,7 +16,7 @@ export default async function PostsPage() {
         <Link key={post.id} href={`/posts/${post.slug}`} className="block mb-4 border p-4 rounded">
           {post.coverImageUrl && (
             <div className="w-full h-48 relative mb-2">
-              <Image src={post.coverImageUrl} fill style={{ objectFit: "cover" }} alt={post.title} />
+              <img src={post.coverImageUrl} className="w-full h-full object-cover" alt={post.title} />
             </div>
           )}
           <h2 className="text-xl font-bold">{post.title}</h2>
