@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from "next/link";
 import LikeButton from "../components/likebutton";
+import CommentForm from "../components/commentform";
 
 interface Post {
   id: string;
@@ -13,6 +14,7 @@ interface Post {
   coverImageUrl?: string;
   _count: {
     Likes: number;
+    comments: number;
   };
   Likes: Array<{ userId: string }>;
 }
@@ -21,6 +23,7 @@ export default function PostsPage() {
   const { data: session } = useSession();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showComments, setShowComments] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     fetchPosts();
@@ -71,11 +74,29 @@ export default function PostsPage() {
             </div>
           </Link>
           <div className="px-4 pb-4">
-            <LikeButton 
-              postId={post.id} 
-              initialLikes={post._count?.Likes || 0} 
-              initialLiked={session ? post.Likes?.some(like => like.userId === session.user?.id) || false : false}
-            />
+            <div className="flex items-center justify-between mb-3">
+              <LikeButton 
+                postId={post.id} 
+                initialLikes={post._count?.Likes || 0} 
+                initialLiked={session ? post.Likes?.some(like => like.userId === session.user?.id) || false : false}
+              />
+              <button
+                onClick={() => setShowComments(prev => ({...prev, [post.id]: !prev[post.id]}))}
+                className="flex items-center gap-2 text-gray-500 hover:text-blue-500"
+              >
+                <span>💬</span>
+                <span className="text-sm">{post._count?.comments || 0} comments</span>
+              </button>
+            </div>
+            {showComments[post.id] && (
+              <CommentForm 
+                postId={post.id} 
+                onCommentAdded={() => {
+                  fetchPosts();
+                  setShowComments(prev => ({...prev, [post.id]: false}));
+                }}
+              />
+            )}
           </div>
         </div>
       ))}

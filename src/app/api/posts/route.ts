@@ -9,6 +9,15 @@ export async function GET() {
       include: {
         author: {
           select: { id: true, name: true, username: true }
+        },
+        Likes: {
+          select: { userId: true }
+        },
+        _count: {
+          select: { 
+            Likes: true,
+            comments: true
+          }
         }
       },
       orderBy: { publishedAt: 'desc' }
