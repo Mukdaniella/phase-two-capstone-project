@@ -13,7 +13,15 @@ export async function GET(req: Request) {
 
     const posts = await prisma.post.findMany({
       where: { authorId: userId },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        isPublished: true,
+        createdAt: true,
+        updatedAt: true,
+        publishedAt: true,
         _count: {
           select: {
             Likes: true,

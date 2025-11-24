@@ -7,6 +7,7 @@ import Link from 'next/link';
 interface Post {
   id: string;
   title: string;
+  slug: string;
   excerpt?: string;
   createdAt: string;
   updatedAt: string;
@@ -61,44 +62,42 @@ export default function Dashboard() {
   }
 
   const PostCard = ({ post }: { post: Post }) => (
-    <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-      <h3 className="text-xl font-semibold mb-2 text-gray-900">{post.title}</h3>
+    <div className="p-6 bg-white rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300">
+      <h3 className="text-xl font-bold text-gray-900 mb-3">{post.title}</h3>
       {post.excerpt && (
-        <p className="text-gray-600 mb-3 line-clamp-2">{post.excerpt}</p>
+        <p className="text-gray-700 mb-4 line-clamp-2">{post.excerpt}</p>
       )}
-      <div className="flex justify-between items-center text-sm text-gray-500">
-        <div className="flex space-x-4">
-          <span>{post._count.Likes} likes</span>
-          <span>{post._count.comments} comments</span>
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="text-center p-4 bg-gray-50 rounded-xl">
+          <div className="text-2xl font-bold text-blue-600 mb-1">{post._count.Likes}</div>
+          <div className="text-gray-600 text-sm">Likes</div>
         </div>
-        <span>
-          {activeTab === 'published' 
-            ? new Date(post.publishedAt!).toLocaleDateString()
-            : new Date(post.updatedAt).toLocaleDateString()}
-        </span>
+        <div className="text-center p-4 bg-gray-50 rounded-xl">
+          <div className="text-2xl font-bold text-purple-600 mb-1">{post._count.comments}</div>
+          <div className="text-gray-600 text-sm">Comments</div>
+        </div>
       </div>
-      <div className="mt-4 flex space-x-2">
-        <Link 
-          href={`/editor?id=${post.id}`}
-          className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
-        >
-          Edit
-        </Link>
-        {activeTab === 'published' && (
+      <div className="text-center text-gray-500 text-sm mb-4">
+        {activeTab === 'published' 
+          ? new Date(post.publishedAt!).toLocaleDateString()
+          : new Date(post.updatedAt).toLocaleDateString()}
+      </div>
+      {activeTab === 'published' && (
+        <div className="text-center">
           <Link 
-            href={`/posts/${post.id}`}
-            className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200"
+            href={`/posts/${post.slug}`}
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-lg hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300"
           >
-            View
+            View Post
           </Link>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-8">
+    <div className="max-w-6xl mx-auto mt-16 p-8">
+      <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
         <p className="text-gray-600">Manage your posts and content</p>
       </div>
@@ -134,7 +133,7 @@ export default function Dashboard() {
             <p className="text-lg mb-4">No published posts yet</p>
             <Link 
               href="/editor"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-lg hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300"
             >
               Create your first post
             </Link>
@@ -146,7 +145,7 @@ export default function Dashboard() {
             <p className="text-lg mb-4">No drafts saved</p>
             <Link 
               href="/editor"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-lg hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300"
             >
               Start writing
             </Link>
