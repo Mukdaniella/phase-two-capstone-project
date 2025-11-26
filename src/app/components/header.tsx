@@ -25,7 +25,6 @@ export default function Header() {
               MediumClone
             </Link>
 
-            {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 text-gray-700 hover:text-blue-600"
