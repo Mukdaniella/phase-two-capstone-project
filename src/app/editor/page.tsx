@@ -20,6 +20,9 @@ export default function EditorPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const coverImageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const editId = searchParams.get('edit');
@@ -51,13 +54,90 @@ export default function EditorPage() {
     }
   };
 
+  const uploadCoverImage = async (file: File) => {
+    setUploadingCover(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const { url } = await res.json();
+        setCoverImageUrl(url);
+        setMessage("Cover image uploaded!");
+        setTimeout(() => setMessage(""), 2000);
+      } else {
+        setMessage("Failed to upload cover image");
+      }
+    } catch (error) {
+      setMessage("Error uploading cover image");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setMessage("File size must be less than 5MB");
+        return;
+      }
+      uploadCoverImage(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => file.type.startsWith('image/'));
+    
+    if (imageFile) {
+      if (imageFile.size > 5 * 1024 * 1024) {
+        setMessage("File size must be less than 5MB");
+        return;
+      }
+      uploadCoverImage(imageFile);
+    }
+  };
+
   const config = {
     readonly: false,
     height: 400,
     uploader: {
-      insertImageAsBase64URI: true,
+      insertImageAsBase64URI: false,
       url: "/api/upload",
       format: "json",
+      prepareData: (formData: FormData) => {
+        return formData;
+      },
+      isSuccess: (resp: any) => {
+        return resp.success === 1;
+      },
+      getMessage: (resp: any) => {
+        return resp.file?.url || resp.url;
+      },
+      process: (resp: any) => {
+        return {
+          files: [resp.file?.url || resp.url]
+        };
+      }
     },
     buttons: [
       "bold",
@@ -184,22 +264,83 @@ export default function EditorPage() {
 
       {/* COVER IMAGE */}
       <div className="mb-6">
-        <input
-          type="url"
-          placeholder="Cover image URL (optional)..."
-          value={coverImageUrl}
-          onChange={(e) => setCoverImageUrl(e.target.value)}
-          className="w-full p-3 border rounded-xl 
-                     focus:outline-none focus:ring-2 focus:ring-purple-400"
-        />
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Cover Image
+        </label>
+        
+        <div className="flex gap-3 mb-3">
+          <input
+            type="url"
+            placeholder="Cover image URL (optional)..."
+            value={coverImageUrl}
+            onChange={(e) => setCoverImageUrl(e.target.value)}
+            className="flex-1 p-3 border rounded-xl 
+                       focus:outline-none focus:ring-2 focus:ring-purple-400"
+          />
+          
+          <button
+            type="button"
+            onClick={() => coverImageRef.current?.click()}
+            disabled={uploadingCover}
+            className="px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 
+                       transition-colors disabled:opacity-50 whitespace-nowrap"
+          >
+            {uploadingCover ? "Uploading..." : "Upload Image"}
+          </button>
+          
+          <input
+            ref={coverImageRef}
+            type="file"
+            accept="image/*"
+            onChange={handleCoverImageChange}
+            className="hidden"
+          />
+        </div>
+        
+        {/* Drag and Drop Zone */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+            dragOver 
+              ? 'border-blue-400 bg-blue-50' 
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
+        >
+          <div className="text-gray-500">
+            <svg className="mx-auto h-12 w-12 mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <p className="text-sm">
+              Drag and drop an image here, or{" "}
+              <button
+                type="button"
+                onClick={() => coverImageRef.current?.click()}
+                className="text-blue-500 hover:text-blue-600 underline"
+              >
+                browse
+              </button>
+            </p>
+            <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+          </div>
+        </div>
+        
         {coverImageUrl && (
-          <div className="mt-4">
+          <div className="mt-4 relative">
             <img
               src={coverImageUrl}
               alt="Cover preview"
               className="w-full h-52 object-cover rounded-xl border"
               onError={(e) => (e.currentTarget.style.display = "none")}
             />
+            <button
+              onClick={() => setCoverImageUrl("")}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 
+                         flex items-center justify-center hover:bg-red-600 transition-colors"
+            >
+              ×
+            </button>
           </div>
         )}
       </div>

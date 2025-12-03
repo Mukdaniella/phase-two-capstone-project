@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "../../lib/prisma";
 
 export async function GET() {
   try {
     const posts = await prisma.post.findMany({
-      where: { isPublished: true },
+      where: {},
       include: {
         author: {
           select: { id: true, name: true, username: true }
@@ -29,7 +29,7 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {

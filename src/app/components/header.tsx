@@ -10,7 +10,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    signOut({ callbackUrl: '/login' });
+    signOut({ callbackUrl: '/' });
   };
 
   return (
@@ -39,7 +39,6 @@ export default function Header() {
               {session ? (
                 <div className="flex items-center gap-6">
                   <ul className="flex gap-6 text-gray-700 font-medium items-center">
-                    <li><Link href="/" className="hover:text-blue-600 transition-colors">Home</Link></li>
                     <li><Link href="/posts" className="hover:text-blue-600 transition-colors">Posts</Link></li>
                     <li><Link href="/editor" className="hover:text-blue-600 transition-colors">New Post</Link></li>
                     <li><Link href="/profile" className="hover:text-blue-600 transition-colors">Profile</Link></li>
